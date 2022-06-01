@@ -1,4 +1,4 @@
-module gorm-mock
+module github.com/kgip/mock-utils
 
 go 1.18
 
