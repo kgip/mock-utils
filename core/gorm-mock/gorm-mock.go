@@ -135,8 +135,10 @@ func (p *PoSelectHandler) Handle(param *wrapParam, mock sqlmock.Sqlmock) {
 	var selects []string
 	var valuesList [][]driver.Value
 	rv := reflect.ValueOf(param.param)
+	hasMultiValue := false
 	if rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array {
 		valuesList = make([][]driver.Value, rv.Len())
+		hasMultiValue = true
 	} else if rv.Kind() == reflect.Struct {
 		valuesList = make([][]driver.Value, 1)
 	} else {
@@ -144,9 +146,9 @@ func (p *PoSelectHandler) Handle(param *wrapParam, mock sqlmock.Sqlmock) {
 	}
 	if param.statement.Selects != nil {
 		selects = param.statement.Selects
+		v := rv
 		for i := 0; i < len(valuesList); i++ {
-			v := rv
-			if len(valuesList) > 1 {
+			if hasMultiValue {
 				v = rv.Index(i)
 			}
 			values := make([]driver.Value, len(selects))
@@ -159,9 +161,9 @@ func (p *PoSelectHandler) Handle(param *wrapParam, mock sqlmock.Sqlmock) {
 		selects = make([]string, len(param.statement.Schema.Fields))
 		for i, field := range param.statement.Schema.Fields {
 			selects[i] = field.DBName
+			v := rv
 			for j := range valuesList {
-				v := rv
-				if len(valuesList) > 1 {
+				if hasMultiValue {
 					v = rv.Index(j)
 				}
 				if valuesList[j] == nil {
